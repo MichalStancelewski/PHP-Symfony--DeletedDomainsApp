@@ -6,6 +6,8 @@
 parameters:
     API_KEY: '%env(AFTERMARKET_API_KEY)%'
     API_SECRET: '%env(AFTERMARKET_API_SECRET)%'
+    ADMIN_EMAIL: '%env(ADMIN_EMAIL)%'
+    DAYS_TO_VALIDATE: 26
 
 services:
     # default configuration for services in *this* file
