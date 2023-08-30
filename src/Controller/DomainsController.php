@@ -4,10 +4,13 @@ namespace App\Controller;
 
 use App\Entity\Domain;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -89,42 +92,33 @@ class DomainsController extends AbstractController
 
     public function sendEmail(int $count): void
     {
-        /*
-                $emailAddress = $this->getParameter('ADMIN_EMAIL');
-                $emailSubject = 'Pobrano nowe domeny w liczbie '. $count . ' z listy usuniętych domen - Deleted Domains App';
-                $emailBody = '<p>Data: '. date('Y m d').'</p>'
-                    .
-                    '<br/>'
-                    .
-                    '<p>System <i>Deleted Domains App</i> pobrał z pliku tekstowego udostępnionego przez serwis DNS nowe domeny w liczbie: <b>'. $count .'</b>.</p>'
-                    .
-                    '<br/>'
-                    .
-                    '<p>Pobrane dzisiaj domeny zostaną zweryfikowane poprzez API za <b>'. $this->getParameter('DAYS_TO_VALIDATE') .'</b> dni.</p>'
-                    .
-                    '<br/>'
-                    .
-                    '<p>Otrzymasz w wiadomości email listę domen zweyfikowanych pozytywnie..</p>'
-                ;
-                $emailHeaders = [
-                    'From' => 'Deleted Domains App <noreply@mgmedia.pl>',
-                    'X-Mailer' => 'PHP/' . phpversion(),
-                    'MIME-Version' => '1.0',
-                    'Content-Type' => 'text/html; charset=iso-8859-1'
-                ];
-
-                mail($emailAddress, $emailSubject, $emailBody, $emailHeaders);
-        */
+        $emailSubject = 'Pobrano nowe domeny w liczbie ' . $count . ' z listy usuniętych domen - Deleted Domains App';
+        $emailBody = '<p>Data: ' . date('Y m d') . '</p>'
+            .
+            '<br/>'
+            .
+            '<p>System <i>Deleted Domains App</i> pobrał z pliku tekstowego udostępnionego przez serwis DNS nowe domeny w liczbie: <b>' . $count . '</b>.</p>'
+            .
+            '<br/>'
+            .
+            '<p>Pobrane dzisiaj domeny zostaną zweryfikowane poprzez API za <b>' . $this->getParameter('DAYS_TO_VALIDATE') . '</b> dni.</p>'
+            .
+            '<br/>'
+            .
+            '<p>Otrzymasz w wiadomości email listę domen zweryfikowanych pozytywnie.</p>';
 
         $email = (new Email())
-            ->from('noreply@mgmedia.pl')
+            ->from(new Address('noreply@mgmedia.pl', 'Deleted Domains App'))
             ->to($this->getParameter('ADMIN_EMAIL'))
-            ->subject('Test')
-            ->html('Test!')
-        ;
+            ->subject($emailSubject)
+            ->html($emailBody);
 
         $mailer = $this->mailer;
-        $mailer->send($email);
+        try {
+            $mailer->send($email);
+        } catch (TransportExceptionInterface $e) {
+            throw new Exception($e->getMessage());
+        }
     }
 
 }
