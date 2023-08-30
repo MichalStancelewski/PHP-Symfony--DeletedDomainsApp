@@ -14,10 +14,14 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class VerificationController extends AbstractController
 {
-    private const MAX_DOMAINS_PER_REQUEST = 3;
+    private const MAX_DOMAINS_PER_REQUEST = 5;
+
+    private EntityManagerInterface $entityManager;
+    private DomainRepository $domainRepository;
 
     public function __construct(EntityManagerInterface $entityManager, DomainRepository $domainRepository)
     {
+
         $this->entityManager = $entityManager;
         $this->domainRepository = $domainRepository;
     }
@@ -36,6 +40,11 @@ class VerificationController extends AbstractController
         $availableDomains = [];
         $notAvailableDomains = [];
         $domainsFromDatabase = $this->getDomainsToArray();
+        if (count($domainsFromDatabase) === 0){
+            return $this->json([
+                'No domains to verify.'
+            ]);
+        }
         $names = [];
         foreach ($domainsFromDatabase as $domain) {
             $names[] = $domain->getName();
@@ -81,10 +90,10 @@ class VerificationController extends AbstractController
     public function getDomainsToArray(): array
     {
         try {
-            $domainsArray = $this->domainRepository->findBy(
-                ['status' => 'new'],
-                null,
-                VerificationController::MAX_DOMAINS_PER_REQUEST);
+            $domainsArray = $this->domainRepository->findNewDomainsOlderThanDays(
+                $this->getParameter('DAYS_TO_VALIDATE'),
+                VerificationController::MAX_DOMAINS_PER_REQUEST
+            );
             return $domainsArray;
         } catch (\Exception $e) {
             return [$e->getMessage()];

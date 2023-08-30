@@ -18,9 +18,12 @@ use Symfony\Component\Routing\Annotation\Route;
 class DomainsController extends AbstractController
 {
     private const DELETED_DOMAINS_URL = 'https://www.dns.pl/deleted_domains.txt';
+    private EntityManagerInterface $entityManager;
+    private MailerInterface $mailer;
 
     public function __construct(EntityManagerInterface $entityManager, MailerInterface $mailer)
     {
+
         $this->entityManager = $entityManager;
         $this->mailer = $mailer;
     }
